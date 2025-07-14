@@ -4,12 +4,15 @@ pipeline {
     environment {
         IMAGE_NAME = 'rimzhimshri/react-app'
         DOCKER_CREDENTIALS_ID = 'docker-hub'
+        CONTAINER_NAME = 'react-app-container'
+        CONTAINER_PORT = '3000'
+        IMAGE_PORT = '80'
     }
 
     stages {
         stage('Clone from GitHub') {
             steps {
-                git credentialsId: 'devops', url: 'https://github.com/rimzhimshrivastava34/docker-reactjs.git', branch: 'master'
+                git credentialsId: 'github-jenkins', url: 'https://github.com/rimzhimshrivastava34/my-react-app.git', branch: 'main'
             }
         }
 
@@ -35,11 +38,19 @@ pipeline {
         stage('Deploy Container') {
             steps {
                 script {
-                    // Stop existing container
-                    sh "docker rm -f react-app-container || true"
+                    // If container exists, remove it; else do nothing
+                    sh """
+                        if [ \$(docker ps -a -q -f name=${CONTAINER_NAME}) ]; then
+                            echo "🛑 Stopping and removing existing container..."
+                            docker stop ${CONTAINER_NAME}
+                            docker rm ${CONTAINER_NAME}
+                        else
+                            echo "ℹ️ No existing container found, skipping removal."
+                        fi
 
-                    // Run new one
-                    sh "docker run -d -p 3000:80 --name react-app-container ${IMAGE_NAME}:${BUILD_NUMBER}"
+                        echo "🚀 Running new container..."
+                        docker run -d -p ${CONTAINER_PORT}:${IMAGE_PORT} --name ${CONTAINER_NAME} ${IMAGE_NAME}:${BUILD_NUMBER}
+                    """
                 }
             }
         }
