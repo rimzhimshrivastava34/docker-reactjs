@@ -8,7 +8,7 @@ pipeline {
     }
 
     stages {
-        stage('Clone from GitHub') {
+        stage('Clone Repository') {
             steps {
                 git credentialsId: 'devops', url: 'https://github.com/rimzhimshrivastava34/docker-reactjs.git', branch: 'master'
             }
@@ -37,13 +37,11 @@ pipeline {
             steps {
                 script {
                     sh """
-                        echo "🪄 Exporting image tag: ${TAG}"
-                        export TAG=${TAG}
-
-                        echo "🧹 Stopping old container (if any)..."
+                        echo "TAG=${TAG}" > .env
+                        echo "🔁 Bringing down old containers (if any)..."
                         docker-compose down || true
 
-                        echo "🚀 Deploying with Docker Compose using tag \$TAG..."
+                        echo "🚀 Deploying using tag: ${TAG}"
                         docker-compose up -d --build
                     """
                 }
@@ -53,10 +51,12 @@ pipeline {
 
     post {
         success {
-            echo "✅ Deployment successful with image tag ${TAG}!"
+            echo "✅ Deployed react-app with image tag: ${TAG}"
         }
         failure {
-            echo '❌ Build or Deployment failed.'
+            echo "❌ Deployment failed"
         }
     }
 }
+
+
