@@ -4,5 +4,7 @@ services:
   react-app:
     image: rimzhimshri/react-app:${TAG}
     ports:
-      - "5001:80"
+      - "${APP_PORT}:80"
     restart: always
+    environment:
+      - NODE_ENV=${NODE_ENV}
